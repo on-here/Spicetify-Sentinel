@@ -15,7 +15,10 @@ impl UpdateBlocker {
             paths.push(local.join("Spotify").join("Update"));
         }
         if let Some(roaming) = dirs::config_dir() {
-            paths.push(roaming.join("Spotify").join("Update"));
+            let p = roaming.join("Spotify").join("Update");
+            if !paths.contains(&p) {
+                paths.push(p);
+            }
         }
         
         paths
@@ -27,7 +30,18 @@ impl UpdateBlocker {
             return false;
         }
 
+        let mut blocked_count = 0;
+        let mut checked_count = 0;
+
         for path in &paths {
+            if let Some(parent) = path.parent() {
+                if !parent.exists() {
+                    continue;
+                }
+            }
+
+            checked_count += 1;
+
             if !path.exists() {
                 return false;
             }
@@ -35,13 +49,26 @@ impl UpdateBlocker {
             if path.is_dir() {
                 return false;
             }
-            // If it's a file, try to open it for writing - if denied, it is blocked
+            // If it's a file, try to open it for writing - if write succeeded, it is NOT blocked
             if let Ok(_) = OpenOptions::new().write(true).open(path) {
                 return false;
             }
+
+            blocked_count += 1;
         }
 
-        true
+        if checked_count > 0 {
+            blocked_count == checked_count
+        } else {
+            for path in &paths {
+                if path.exists() && !path.is_dir() {
+                    if OpenOptions::new().write(true).open(path).is_err() {
+                        return true;
+                    }
+                }
+            }
+            false
+        }
     }
 
     pub fn block() -> Result<String, String> {

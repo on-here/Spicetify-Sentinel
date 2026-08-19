@@ -19,3 +19,4 @@ scripts/generate_spotify_green_icon.ps1
 Thumbs.db
 *.log
 .gemini/
+limpiar.py

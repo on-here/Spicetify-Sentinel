@@ -313,7 +313,7 @@ fn window_minimize(window: tauri::Window) {
 
 #[tauri::command]
 fn window_hide(window: tauri::Window) {
-    let _ = window.destroy();
+    let _ = window.hide();
     SentinelWatcher::trim_memory();
 }
 
@@ -352,6 +352,9 @@ pub fn run() {
     let logs_clone = Arc::clone(&logs_arc);
 
     tauri::Builder::default()
+        .plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| {
+            show_or_create_main_window(app);
+        }))
         .plugin(tauri_plugin_notification::init())
         .plugin(tauri_plugin_process::init())
         .manage(AppState { logs: logs_arc })
@@ -432,9 +435,6 @@ pub fn run() {
             if !is_minimized {
                 show_or_create_main_window(&handle);
             } else {
-                if let Some(win) = app.get_webview_window("main") {
-                    let _ = win.destroy();
-                }
                 SentinelWatcher::trim_memory();
             }
 
@@ -443,7 +443,7 @@ pub fn run() {
         .on_window_event(|window, event| {
             if let tauri::WindowEvent::CloseRequested { api, .. } = event {
                 api.prevent_close();
-                let _ = window.destroy();
+                let _ = window.hide();
                 SentinelWatcher::trim_memory();
             }
         })

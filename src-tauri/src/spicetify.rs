@@ -144,14 +144,35 @@ impl SpicetifyManager {
         None
     }
 
-    pub fn is_patched() -> bool {
+    pub fn get_spicetify_config_dir() -> PathBuf {
+        // 1. Check %APPDATA%\spicetify first (Standard Windows path for Spicetify v2)
+        if let Some(roaming) = dirs::config_dir() {
+            let p = roaming.join("spicetify");
+            if p.exists() {
+                return p;
+            }
+        }
+        // 2. Check %USERPROFILE%\.spicetify (Legacy Unix path)
         if let Some(home) = dirs::home_dir() {
-            let backup_dir = home.join(".spicetify").join("Backup");
-            if backup_dir.exists() {
-                if let Ok(entries) = fs::read_dir(&backup_dir) {
-                    if entries.count() > 0 {
-                        return true;
-                    }
+            let p = home.join(".spicetify");
+            if p.exists() {
+                return p;
+            }
+        }
+        // 3. Default to %APPDATA%\spicetify
+        dirs::config_dir()
+            .map(|r| r.join("spicetify"))
+            .or_else(|| dirs::home_dir().map(|h| h.join(".spicetify")))
+            .unwrap_or_else(|| PathBuf::from(r"C:\spicetify"))
+    }
+
+    pub fn is_patched() -> bool {
+        let spice_dir = Self::get_spicetify_config_dir();
+        let backup_dir = spice_dir.join("Backup");
+        if backup_dir.exists() {
+            if let Ok(entries) = fs::read_dir(&backup_dir) {
+                if entries.count() > 0 {
+                    return true;
                 }
             }
         }
@@ -185,8 +206,8 @@ impl SpicetifyManager {
     }
 
     pub fn ensure_adblock_installed() -> Result<String, String> {
-        let home = dirs::home_dir().ok_or("No se pudo obtener directorio HOME")?;
-        let ext_dir = home.join(".spicetify").join("Extensions");
+        let spice_dir = Self::get_spicetify_config_dir();
+        let ext_dir = spice_dir.join("Extensions");
         
         if !ext_dir.exists() {
             fs::create_dir_all(&ext_dir).map_err(|e| format!("Error creando carpeta Extensions: {}", e))?;
@@ -207,8 +228,8 @@ impl SpicetifyManager {
     }
 
     pub fn ensure_marketplace_installed() -> Result<String, String> {
-        let home = dirs::home_dir().ok_or("No se pudo obtener directorio HOME")?;
-        let custom_apps_dir = home.join(".spicetify").join("CustomApps").join("marketplace");
+        let spice_dir = Self::get_spicetify_config_dir();
+        let custom_apps_dir = spice_dir.join("CustomApps").join("marketplace");
         
         if !custom_apps_dir.exists() {
             // Install marketplace via official install script
@@ -237,30 +258,34 @@ impl SpicetifyManager {
     }
 
     pub fn is_adblock_active() -> bool {
-        if let Some(home) = dirs::home_dir() {
-            let adblock_file = home.join(".spicetify").join("Extensions").join("adblock.js");
-            if !adblock_file.exists() {
-                return false;
-            }
-            let config_file = home.join(".spicetify").join("config-xpui.ini");
+        let spice_dir = Self::get_spicetify_config_dir();
+        let adblock_file = spice_dir.join("Extensions").join("adblock.js");
+        let config_file = spice_dir.join("config-xpui.ini");
+        
+        if adblock_file.exists() {
             if let Ok(content) = fs::read_to_string(config_file) {
-                return content.contains("adblock.js");
+                return content.contains("adblock.js") || content.contains("adblock");
             }
         }
         false
     }
 
     pub fn is_marketplace_active() -> bool {
-        if let Some(home) = dirs::home_dir() {
-            let custom_app = home.join(".spicetify").join("CustomApps").join("marketplace");
-            return custom_app.exists();
+        let spice_dir = Self::get_spicetify_config_dir();
+        let custom_app = spice_dir.join("CustomApps").join("marketplace");
+        if custom_app.exists() {
+            return true;
+        }
+        let config_file = spice_dir.join("config-xpui.ini");
+        if let Ok(content) = fs::read_to_string(config_file) {
+            return content.contains("marketplace");
         }
         false
     }
 
     fn add_extension_to_config(ext_name: &str) -> Result<(), String> {
-        let home = dirs::home_dir().ok_or("No se encontró HOME")?;
-        let config_path = home.join(".spicetify").join("config-xpui.ini");
+        let spice_dir = Self::get_spicetify_config_dir();
+        let config_path = spice_dir.join("config-xpui.ini");
 
         if !config_path.exists() {
             return Ok(());
@@ -298,8 +323,8 @@ impl SpicetifyManager {
     }
 
     fn add_custom_app_to_config(app_name: &str) -> Result<(), String> {
-        let home = dirs::home_dir().ok_or("No se encontró HOME")?;
-        let config_path = home.join(".spicetify").join("config-xpui.ini");
+        let spice_dir = Self::get_spicetify_config_dir();
+        let config_path = spice_dir.join("config-xpui.ini");
 
         if !config_path.exists() {
             return Ok(());

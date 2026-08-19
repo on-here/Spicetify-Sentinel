@@ -2,7 +2,7 @@
 name = "spicetify-sentinel"
 version = "1.0.0"
 description = "Spicetify Sentinel - Auto-Repair, Update Blocker & Watcher for Spotify"
-authors = ["Xeon"]
+authors = ["Spicetify Sentinel Contributors"]
 edition = "2021"
 
 [lib]
@@ -16,6 +16,7 @@ tauri-build = { version = "2.0", features = [] }
 tauri = { version = "2.0", features = ["tray-icon"] }
 tauri-plugin-notification = "2.0"
 tauri-plugin-process = "2.0"
+tauri-plugin-single-instance = "2.0"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 notify = "6.1"

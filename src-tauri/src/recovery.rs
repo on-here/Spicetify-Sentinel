@@ -35,25 +35,23 @@ impl RecoveryManager {
         }
 
         // 2. Backup Spicetify configs & themes & extensions
-        if let Some(home) = dirs::home_dir() {
-            let spice_dir = home.join(".spicetify");
-            let spice_backup = backup_dir.join(".spicetify");
-            let _ = fs::create_dir_all(&spice_backup);
+        let spice_dir = SpicetifyManager::get_spicetify_config_dir();
+        let spice_backup = backup_dir.join("spicetify");
+        let _ = fs::create_dir_all(&spice_backup);
 
-            let config_file = spice_dir.join("config-xpui.ini");
-            if config_file.exists() {
-                let _ = fs::copy(&config_file, spice_backup.join("config-xpui.ini"));
-            }
+        let config_file = spice_dir.join("config-xpui.ini");
+        if config_file.exists() {
+            let _ = fs::copy(&config_file, spice_backup.join("config-xpui.ini"));
+        }
 
-            let themes_dir = spice_dir.join("Themes");
-            if themes_dir.exists() {
-                let _ = Self::copy_dir_recursive(&themes_dir, &spice_backup.join("Themes"));
-            }
+        let themes_dir = spice_dir.join("Themes");
+        if themes_dir.exists() {
+            let _ = Self::copy_dir_recursive(&themes_dir, &spice_backup.join("Themes"));
+        }
 
-            let exts_dir = spice_dir.join("Extensions");
-            if exts_dir.exists() {
-                let _ = Self::copy_dir_recursive(&exts_dir, &spice_backup.join("Extensions"));
-            }
+        let exts_dir = spice_dir.join("Extensions");
+        if exts_dir.exists() {
+            let _ = Self::copy_dir_recursive(&exts_dir, &spice_backup.join("Extensions"));
         }
 
         Ok(backup_dir)
@@ -153,26 +151,24 @@ impl RecoveryManager {
         }
 
         // Restore Spicetify files
-        let spice_backup = backup_dir.join(".spicetify");
+        let spice_backup = backup_dir.join("spicetify");
         if spice_backup.exists() {
-            if let Some(home) = dirs::home_dir() {
-                let spice_home = home.join(".spicetify");
-                let _ = fs::create_dir_all(&spice_home);
+            let spice_dest = SpicetifyManager::get_spicetify_config_dir();
+            let _ = fs::create_dir_all(&spice_dest);
 
-                let config = spice_backup.join("config-xpui.ini");
-                if config.exists() {
-                    let _ = fs::copy(&config, spice_home.join("config-xpui.ini"));
-                }
+            let config = spice_backup.join("config-xpui.ini");
+            if config.exists() {
+                let _ = fs::copy(&config, spice_dest.join("config-xpui.ini"));
+            }
 
-                let themes = spice_backup.join("Themes");
-                if themes.exists() {
-                    let _ = Self::copy_dir_recursive(&themes, &spice_home.join("Themes"));
-                }
+            let themes = spice_backup.join("Themes");
+            if themes.exists() {
+                let _ = Self::copy_dir_recursive(&themes, &spice_dest.join("Themes"));
+            }
 
-                let exts = spice_backup.join("Extensions");
-                if exts.exists() {
-                    let _ = Self::copy_dir_recursive(&exts, &spice_home.join("Extensions"));
-                }
+            let exts = spice_backup.join("Extensions");
+            if exts.exists() {
+                let _ = Self::copy_dir_recursive(&exts, &spice_dest.join("Extensions"));
             }
         }
 
