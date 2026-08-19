@@ -45,6 +45,7 @@ pub fn show_or_create_main_window(app: &AppHandle) {
         .decorations(false)
         .shadow(true)
         .center()
+        .visible(true)
         .build();
     }
 }
@@ -321,6 +322,11 @@ fn window_start_drag(window: tauri::Window) {
     let _ = window.start_dragging();
 }
 
+#[tauri::command]
+fn restart_app(app: AppHandle) {
+    app.restart();
+}
+
 fn add_internal_log(logs: &Arc<Mutex<Vec<SentinelLog>>>, level: &str, message: &str) {
     let log = SentinelLog::new(level, message);
 
@@ -352,12 +358,12 @@ pub fn run() {
         .setup(move |app| {
             let handle = app.handle().clone();
 
-            // Set up Systray Menu
-            let quit_i = MenuItem::with_id(app, "quit", "Salir de Spicetify Sentinel", true, None::<&str>)?;
-            let show_i = MenuItem::with_id(app, "show", "Abrir Panel de Control", true, None::<&str>)?;
-            let heal_i = MenuItem::with_id(app, "heal", "⚡ Auto-Reparar & Re-aplicar", true, None::<&str>)?;
-            let block_i = MenuItem::with_id(app, "toggle_block", "🛡️ Alternar Bloqueo de Updates", true, None::<&str>)?;
-            let spotify_i = MenuItem::with_id(app, "spotify", "🎵 Abrir Spotify", true, None::<&str>)?;
+            // Set up Systray Menu (Universal Clean English)
+            let show_i = MenuItem::with_id(app, "show", "Open Dashboard", true, None::<&str>)?;
+            let heal_i = MenuItem::with_id(app, "heal", "⚡ Auto-Repair & Apply", true, None::<&str>)?;
+            let block_i = MenuItem::with_id(app, "toggle_block", "🛡️ Toggle Update Blocker", true, None::<&str>)?;
+            let spotify_i = MenuItem::with_id(app, "spotify", "🎵 Open Spotify", true, None::<&str>)?;
+            let quit_i = MenuItem::with_id(app, "quit", "Exit Spicetify Sentinel", true, None::<&str>)?;
 
             let menu = Menu::with_items(app, &[&show_i, &heal_i, &block_i, &spotify_i, &quit_i])?;
 
@@ -409,7 +415,28 @@ pub fn run() {
                 .build(app)?;
 
             // Start FileSystem Watcher in background
-            SentinelWatcher::start_background_watcher(handle, logs_clone);
+            SentinelWatcher::start_background_watcher(handle.clone(), logs_clone);
+
+            // 1. Sync Autostart: Enabled by default unless physically disabled by user
+            AutoStartManager::sync_on_startup();
+
+            // 2. Guarantee Spotify Update Blocker is enabled by default
+            if !UpdateBlocker::is_blocked() {
+                let _ = UpdateBlocker::block();
+            }
+
+            // 3. Conditional window launch: If user double-clicked, show UI. If Windows booted with --hide / --minimized, stay silent in Systray without focus.
+            let is_minimized = std::env::args().any(|arg| {
+                arg == "--hide" || arg == "-h" || arg == "--minimized" || arg == "-m" || arg == "--silent" || arg == "--tray" || arg == "--background"
+            });
+            if !is_minimized {
+                show_or_create_main_window(&handle);
+            } else {
+                if let Some(win) = app.get_webview_window("main") {
+                    let _ = win.destroy();
+                }
+                SentinelWatcher::trim_memory();
+            }
 
             Ok(())
         })
@@ -436,6 +463,7 @@ pub fn run() {
             window_minimize,
             window_hide,
             window_start_drag,
+            restart_app,
         ])
         .build(tauri::generate_context!())
         .expect("error while building tauri application")

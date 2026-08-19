@@ -1,69 +1,72 @@
 import React, { useRef, useEffect } from 'react';
 import { SentinelLog } from '../types';
-import { Terminal, Trash } from 'lucide-react';
+import { Terminal, Trash2 } from 'lucide-react';
+import { translations, Language, translateLogMessage } from '../i18n/translations';
 
 interface LogConsoleProps {
   logs: SentinelLog[];
   onClearLogs: () => void;
+  lang: Language;
 }
 
-export const LogConsole: React.FC<LogConsoleProps> = ({ logs, onClearLogs }) => {
-  const containerRef = useRef<HTMLDivElement>(null);
+export const LogConsole: React.FC<LogConsoleProps> = ({ logs, onClearLogs, lang }) => {
+  const t = translations[lang];
+  const endRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (containerRef.current) {
-      containerRef.current.scrollTop = 0;
-    }
+    endRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [logs]);
 
-  const getLevelBadge = (level: string) => {
+  const getBadgeColor = (level: string) => {
     switch (level) {
       case 'success':
-        return <span className="text-spotify-green font-semibold">[OK]</span>;
+        return 'text-spotify-green';
       case 'warn':
-        return <span className="text-spotify-warning font-semibold">[WARN]</span>;
+        return 'text-spotify-warning';
       case 'error':
-        return <span className="text-spotify-error font-semibold">[ERR]</span>;
+        return 'text-spotify-error';
       default:
-        return <span className="text-spotify-subtext font-semibold">[INFO]</span>;
+        return 'text-sky-400';
     }
   };
 
   return (
-    <div className="p-4 flex-1 flex flex-col min-h-0">
-      <div className="flex items-center justify-between mb-2">
-        <div className="flex items-center gap-1.5 text-xs font-semibold text-spotify-subtext uppercase tracking-wider">
+    <div className="flex-1 flex flex-col min-h-0 mx-4 mb-3 mt-2 bg-black/40 border border-spotify-border/60 rounded-lg overflow-hidden">
+      {/* Console Header */}
+      <div className="flex items-center justify-between px-3 py-1.5 bg-spotify-surface/80 border-b border-spotify-border/40 select-none">
+        <div className="flex items-center gap-1.5 text-spotify-subtext text-[11px] font-mono">
           <Terminal className="w-3.5 h-3.5 text-spotify-green" />
-          Registro del Centinela
+          <span>{t.activityLog}</span>
         </div>
         <button
           onClick={onClearLogs}
-          title="Limpiar registro visual"
-          className="p-1 text-spotify-subtext hover:text-white transition-colors"
+          title={t.clearLogs}
+          className="text-spotify-subtext hover:text-white transition-colors p-1 rounded hover:bg-spotify-elevated"
         >
-          <Trash className="w-3 h-3" />
+          <Trash2 className="w-3 h-3" />
         </button>
       </div>
 
-      <div
-        ref={containerRef}
-        className="flex-1 bg-black/40 border border-spotify-border/80 rounded-lg p-2.5 overflow-y-auto font-mono text-[11px] space-y-1.5 min-h-[140px] max-h-[170px]"
-      >
+      {/* Log Output Area */}
+      <div className="flex-1 overflow-y-auto p-2.5 font-mono text-[11px] space-y-1 select-text">
         {logs.length === 0 ? (
-          <div className="text-spotify-subtext/60 text-center py-6">
-            Sin eventos registrados. El centinela está esperando cambios.
+          <div className="text-spotify-subtext italic text-center py-4 select-none">
+            {t.emptyLogs}
           </div>
         ) : (
           logs.map((log) => (
-            <div key={log.id} className="flex items-start gap-2 leading-tight">
-              <span className="text-spotify-subtext/60 shrink-0 select-none">
+            <div key={log.id} className="leading-relaxed flex items-start gap-2 break-all">
+              <span className="text-spotify-subtext select-none shrink-0 font-mono text-[10px]">
                 {log.timestamp}
               </span>
-              <span className="shrink-0 select-none">{getLevelBadge(log.level)}</span>
-              <span className="text-white/90 break-words flex-1">{log.message}</span>
+              <span className={`font-bold uppercase text-[10px] shrink-0 ${getBadgeColor(log.level)}`}>
+                [{log.level === 'warn' ? 'WARN' : log.level === 'error' ? 'ERR' : log.level === 'success' ? 'OK' : 'INFO'}]
+              </span>
+              <span className="text-white/90">{translateLogMessage(log.message, lang)}</span>
             </div>
           ))
         )}
+        <div ref={endRef} />
       </div>
     </div>
   );

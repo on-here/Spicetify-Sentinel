@@ -110,8 +110,8 @@ If you'd like to contribute or build the application yourself:
 
 ```powershell
 # 1. Clone the repository
-git clone https://github.com/your-username/Auto_spicetify.git
-cd Auto_spicetify
+git clone https://github.com/on-here/Spicetify-Sentinel.git
+cd Spicetify-Sentinel
 
 # 2. Install dependencies
 npm install

@@ -1,13 +1,17 @@
 import React from 'react';
 import { SystemStatus } from '../types';
 import { Music, Zap, Shield, Sparkles, CheckCircle2, AlertTriangle, XCircle } from 'lucide-react';
+import { translations, Language } from '../i18n/translations';
 
 interface StatusGridProps {
   status: SystemStatus | null;
   loading: boolean;
+  lang: Language;
 }
 
-export const StatusGrid: React.FC<StatusGridProps> = ({ status, loading }) => {
+export const StatusGrid: React.FC<StatusGridProps> = ({ status, loading, lang }) => {
+  const t = translations[lang];
+
   return (
     <div className="grid grid-cols-2 gap-3 p-4">
       {/* Spotify Card */}
@@ -18,20 +22,20 @@ export const StatusGrid: React.FC<StatusGridProps> = ({ status, loading }) => {
               <Music className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="text-xs font-semibold text-white">Spotify Desktop</h3>
+              <h3 className="text-xs font-semibold text-white">{t.spotifyDesktop}</h3>
               <p className="text-[11px] text-spotify-subtext">
-                {loading ? 'Comprobando...' : status?.spotify_installed ? (status.spotify_version || 'Instalado') : 'No detectado'}
+                {loading ? '...' : status?.spotify_installed ? (status.spotify_version || t.spotifyDetected) : t.spotifyNotFound}
               </p>
             </div>
           </div>
           {status?.spotify_running ? (
             <span className="flex items-center gap-1 text-[10px] bg-spotify-green/10 text-spotify-green px-2 py-0.5 rounded-full font-medium border border-spotify-green/20">
               <span className="w-1.5 h-1.5 rounded-full bg-spotify-green animate-pulse" />
-              Abierto
+              {t.spotifyRunning}
             </span>
           ) : (
             <span className="text-[10px] bg-spotify-elevated text-spotify-subtext px-2 py-0.5 rounded-full font-medium">
-              Cerrado
+              {t.spotifyClosed}
             </span>
           )}
         </div>
@@ -45,21 +49,21 @@ export const StatusGrid: React.FC<StatusGridProps> = ({ status, loading }) => {
               <Zap className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="text-xs font-semibold text-white">Spicetify CLI</h3>
+              <h3 className="text-xs font-semibold text-white">{t.spicetifyCli}</h3>
               <p className="text-[11px] text-spotify-subtext">
-                {loading ? 'Comprobando...' : status?.spicetify_installed ? `v${status.spicetify_version || 'Activo'}` : 'No instalado'}
+                {loading ? '...' : status?.spicetify_installed ? `v${status.spicetify_version || 'Active'}` : t.notInstalled}
               </p>
             </div>
           </div>
           {status?.is_patched ? (
             <span className="flex items-center gap-1 text-[10px] bg-spotify-green/10 text-spotify-green px-2 py-0.5 rounded-full font-medium border border-spotify-green/20">
               <CheckCircle2 className="w-3 h-3" />
-              Parcheado
+              {t.patched}
             </span>
           ) : (
             <span className="flex items-center gap-1 text-[10px] bg-spotify-error/10 text-spotify-error px-2 py-0.5 rounded-full font-medium border border-spotify-error/20">
               <AlertTriangle className="w-3 h-3" />
-              Sin Parche
+              {t.unpatched}
             </span>
           )}
         </div>
@@ -73,21 +77,21 @@ export const StatusGrid: React.FC<StatusGridProps> = ({ status, loading }) => {
               <Shield className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="text-xs font-semibold text-white">Bloqueo de Updates</h3>
+              <h3 className="text-xs font-semibold text-white">{t.updateBlocker}</h3>
               <p className="text-[11px] text-spotify-subtext">
-                {status?.updates_blocked ? 'Permisos NTFS denegados' : 'Updates permitidos'}
+                {status?.updates_blocked ? t.shieldBlockedSub : t.shieldAllowedSub}
               </p>
             </div>
           </div>
           {status?.updates_blocked ? (
             <span className="flex items-center gap-1 text-[10px] bg-spotify-green/10 text-spotify-green px-2 py-0.5 rounded-full font-medium border border-spotify-green/20">
               <CheckCircle2 className="w-3 h-3" />
-              Inmune
+              {t.shieldImmune}
             </span>
           ) : (
             <span className="flex items-center gap-1 text-[10px] bg-spotify-warning/10 text-spotify-warning px-2 py-0.5 rounded-full font-medium border border-spotify-warning/20">
               <XCircle className="w-3 h-3" />
-              Vulnerable
+              {t.shieldVulnerable}
             </span>
           )}
         </div>
@@ -101,9 +105,9 @@ export const StatusGrid: React.FC<StatusGridProps> = ({ status, loading }) => {
               <Sparkles className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="text-xs font-semibold text-white">Adblock & Extras</h3>
+              <h3 className="text-xs font-semibold text-white">{t.adblockExtras}</h3>
               <p className="text-[11px] text-spotify-subtext">
-                {status?.adblock_installed ? 'Adblock forzado y activo' : 'Inyectando extensiones'}
+                {status?.adblock_installed ? t.adblockSubActive : t.adblockSubInactive}
               </p>
             </div>
           </div>

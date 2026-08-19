@@ -9,6 +9,7 @@ import { LogConsole } from './components/LogConsole';
 import { SettingsModal } from './components/SettingsModal';
 import { NuclearConfirmModal } from './components/NuclearConfirmModal';
 import { SystemStatus, SentinelLog, CommandResult } from './types';
+import { Language, getInitialLanguage } from './i18n/translations';
 
 export const App: React.FC = () => {
   const [status, setStatus] = useState<SystemStatus | null>(null);
@@ -16,6 +17,12 @@ export const App: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState<boolean>(false);
   const [isNuclearOpen, setIsNuclearOpen] = useState<boolean>(false);
+  const [lang, setLang] = useState<Language>(getInitialLanguage);
+
+  const handleLanguageChange = (newLang: Language) => {
+    setLang(newLang);
+    localStorage.setItem('sentinel_lang', newLang);
+  };
 
   const fetchStatus = useCallback(async () => {
     try {
@@ -145,12 +152,22 @@ export const App: React.FC = () => {
   };
 
   const handleToggleAutostart = async (enable: boolean) => {
+    setStatus((prev) => (prev ? { ...prev, autostart_enabled: enable } : null));
     try {
       const res = await invoke<CommandResult>('set_autostart', { enable });
       setLogs(res.logs);
-      await fetchStatus();
     } catch (err) {
       console.error(err);
+    } finally {
+      await fetchStatus();
+    }
+  };
+
+  const handleRestartApp = async () => {
+    try {
+      await invoke('restart_app');
+    } catch (e) {
+      console.error(e);
     }
   };
 
@@ -164,12 +181,13 @@ export const App: React.FC = () => {
       <TitleBar
         onOpenSettings={() => setIsSettingsOpen(true)}
         watcherActive={status?.watcher_active ?? true}
+        lang={lang}
       />
 
       {/* Main Content Area */}
       <main className="flex-1 flex flex-col min-h-0 overflow-hidden">
         {/* Status Dashboard Grid */}
-        <StatusGrid status={status} loading={!status} />
+        <StatusGrid status={status} loading={!status} lang={lang} />
 
         {/* Quick Action Buttons */}
         <ActionButtons
@@ -182,18 +200,22 @@ export const App: React.FC = () => {
           isBlocked={status?.updates_blocked ?? false}
           cacheSizeFormatted={status?.cache_size_formatted}
           loading={loading}
+          lang={lang}
         />
 
         {/* Real-time Activity Log Terminal */}
-        <LogConsole logs={logs} onClearLogs={handleClearLogs} />
+        <LogConsole logs={logs} onClearLogs={handleClearLogs} lang={lang} />
       </main>
 
       {/* Settings Modal */}
       <SettingsModal
         isOpen={isSettingsOpen}
         onClose={() => setIsSettingsOpen(false)}
-        autostart={status?.autostart_enabled ?? true}
+        autostart={status?.autostart_enabled ?? false}
         onToggleAutostart={handleToggleAutostart}
+        lang={lang}
+        onLanguageChange={handleLanguageChange}
+        onRestartApp={handleRestartApp}
         loading={loading}
       />
 
@@ -203,6 +225,7 @@ export const App: React.FC = () => {
         onClose={() => setIsNuclearOpen(false)}
         onConfirm={handleNuclearReinstall}
         loading={loading}
+        lang={lang}
       />
     </div>
   );

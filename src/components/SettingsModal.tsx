@@ -1,11 +1,15 @@
 import React from 'react';
-import { X, Check } from 'lucide-react';
+import { X, Check, Globe, RotateCcw } from 'lucide-react';
+import { translations, Language } from '../i18n/translations';
 
 interface SettingsModalProps {
   isOpen: boolean;
   onClose: () => void;
   autostart: boolean;
   onToggleAutostart: (val: boolean) => void;
+  lang: Language;
+  onLanguageChange: (lang: Language) => void;
+  onRestartApp?: () => void;
   loading: boolean;
 }
 
@@ -14,16 +18,20 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   onClose,
   autostart,
   onToggleAutostart,
+  lang,
+  onLanguageChange,
+  onRestartApp,
   loading,
 }) => {
   if (!isOpen) return null;
+  const t = translations[lang];
 
   return (
     <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
       <div className="bg-spotify-surface border border-spotify-border w-full max-w-md rounded-xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-150">
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-3 border-b border-spotify-border bg-spotify-card">
-          <h2 className="text-sm font-bold text-white">Configuración del Centinela</h2>
+          <h2 className="text-sm font-bold text-white">{t.settingsTitle}</h2>
           <button
             onClick={onClose}
             className="text-spotify-subtext hover:text-white p-1 rounded-md transition-colors"
@@ -33,13 +41,46 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
         </div>
 
         {/* Content */}
-        <div className="p-4 space-y-4">
+        <div className="p-4 space-y-3.5">
+          {/* Language Selector */}
+          <div className="flex items-center justify-between p-3 rounded-lg bg-spotify-card border border-spotify-border/60">
+            <div className="flex items-center gap-2">
+              <Globe className="w-4 h-4 text-sky-400" />
+              <div>
+                <div className="text-xs font-semibold text-white">{t.languageTitle}</div>
+                <div className="text-[11px] text-spotify-subtext">English / Español</div>
+              </div>
+            </div>
+            <div className="flex items-center bg-spotify-base border border-spotify-border rounded-lg p-0.5">
+              <button
+                onClick={() => onLanguageChange('en')}
+                className={`px-2.5 py-1 text-xs font-medium rounded-md transition-all ${
+                  lang === 'en'
+                    ? 'bg-spotify-green text-black font-bold shadow'
+                    : 'text-spotify-subtext hover:text-white'
+                }`}
+              >
+                EN
+              </button>
+              <button
+                onClick={() => onLanguageChange('es')}
+                className={`px-2.5 py-1 text-xs font-medium rounded-md transition-all ${
+                  lang === 'es'
+                    ? 'bg-spotify-green text-black font-bold shadow'
+                    : 'text-spotify-subtext hover:text-white'
+                }`}
+              >
+                ES
+              </button>
+            </div>
+          </div>
+
           {/* Autostart Option */}
           <div className="flex items-center justify-between p-3 rounded-lg bg-spotify-card border border-spotify-border/60">
             <div>
-              <div className="text-xs font-semibold text-white">Iniciar con Windows</div>
+              <div className="text-xs font-semibold text-white">{t.autostartTitle}</div>
               <div className="text-[11px] text-spotify-subtext">
-                Ejecuta el centinela minimizado al arrancar el sistema
+                {t.autostartDesc}
               </div>
             </div>
             <button
@@ -57,13 +98,13 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
           <div className="flex items-center justify-between p-3 rounded-lg bg-spotify-card border border-spotify-border/60">
             <div>
               <div className="text-xs font-semibold text-white flex items-center gap-1.5">
-                Inyección de Adblock Obligatoria
+                {t.adblockSettingTitle}
                 <span className="text-[10px] bg-spotify-green/20 text-spotify-green px-1.5 rounded">
-                  Fijado
+                  {t.adblockSettingBadge}
                 </span>
               </div>
               <div className="text-[11px] text-spotify-subtext">
-                Garantiza adblock.js activo en cualquier recuperación
+                {t.adblockSettingDesc}
               </div>
             </div>
             <div className="text-spotify-green">
@@ -75,13 +116,13 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
           <div className="flex items-center justify-between p-3 rounded-lg bg-spotify-card border border-spotify-border/60">
             <div>
               <div className="text-xs font-semibold text-white flex items-center gap-1.5">
-                Auto-Sanación Silenciosa
+                {t.healingSettingTitle}
                 <span className="text-[10px] bg-spotify-green/20 text-spotify-green px-1.5 rounded">
-                  Fijado
+                  {t.healingSettingBadge}
                 </span>
               </div>
               <div className="text-[11px] text-spotify-subtext">
-                Re-parchea automáticamente en segundo plano sin pedir confirmaciones
+                {t.healingSettingDesc}
               </div>
             </div>
             <div className="text-spotify-green">
@@ -89,9 +130,28 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             </div>
           </div>
 
+          {/* Restart App Option */}
+          {onRestartApp && (
+            <div className="flex items-center justify-between p-3 rounded-lg bg-spotify-card border border-spotify-border/60">
+              <div>
+                <div className="text-xs font-semibold text-white">{t.restartAppTitle}</div>
+                <div className="text-[11px] text-spotify-subtext">
+                  {t.restartAppDesc}
+                </div>
+              </div>
+              <button
+                onClick={onRestartApp}
+                className="px-2.5 py-1 bg-spotify-elevated hover:bg-spotify-highlight text-white text-xs font-medium rounded-md transition-colors flex items-center gap-1 border border-spotify-border/40"
+              >
+                <RotateCcw className="w-3 h-3 text-spotify-green" />
+                {t.restartAppBtn}
+              </button>
+            </div>
+          )}
+
           {/* Memory Target Note */}
           <div className="p-3 bg-spotify-base/50 rounded-lg border border-spotify-border/40 text-[11px] text-spotify-subtext leading-relaxed">
-            <span className="text-spotify-green font-medium">⚡ Eficiencia extrema:</span> El centinela corre en Rust nativo suspendido en llamadas al kernel de Windows (<span className="text-white font-medium">&lt;10 MB de RAM y 0% de CPU</span>).
+            {t.efficiencyNote}
           </div>
         </div>
 
@@ -101,7 +161,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             onClick={onClose}
             className="px-4 py-1.5 bg-spotify-green hover:bg-spotify-greenHover text-black text-xs font-bold rounded-full transition-colors"
           >
-            Listo
+            {t.doneBtn}
           </button>
         </div>
       </div>

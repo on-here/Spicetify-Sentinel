@@ -1,13 +1,17 @@
 import React from 'react';
 import { invoke } from '@tauri-apps/api/core';
 import { ShieldCheck, Minus, X, Settings as SettingsIcon } from 'lucide-react';
+import { translations, Language } from '../i18n/translations';
 
 interface TitleBarProps {
   onOpenSettings: () => void;
   watcherActive: boolean;
+  lang: Language;
 }
 
-export const TitleBar: React.FC<TitleBarProps> = ({ onOpenSettings, watcherActive }) => {
+export const TitleBar: React.FC<TitleBarProps> = ({ onOpenSettings, watcherActive, lang }) => {
+  const t = translations[lang];
+
   const handleMouseDown = async (e: React.MouseEvent<HTMLElement>) => {
     if (e.button === 0 && (e.target as HTMLElement).closest('button') === null) {
       try {
@@ -51,9 +55,9 @@ export const TitleBar: React.FC<TitleBarProps> = ({ onOpenSettings, watcherActiv
           )}
         </div>
         <span className="text-xs font-bold tracking-wide text-white uppercase flex items-center gap-1.5" data-tauri-drag-region>
-          Spicetify Sentinel
+          {t.appTitle}
           <span className="text-[10px] font-normal text-spotify-subtext px-1.5 py-0.2 bg-spotify-elevated rounded border border-spotify-border/40">
-            v1.0
+            {t.versionTag}
           </span>
         </span>
       </div>
@@ -62,7 +66,7 @@ export const TitleBar: React.FC<TitleBarProps> = ({ onOpenSettings, watcherActiv
       <div className="flex items-center gap-1" data-tauri-no-drag onMouseDown={(e) => e.stopPropagation()}>
         <button
           onClick={onOpenSettings}
-          title="Configuración"
+          title={t.settingsIconTitle}
           data-tauri-no-drag
           className="p-1.5 text-spotify-subtext hover:text-white hover:bg-spotify-elevated rounded transition-colors"
         >
@@ -70,7 +74,7 @@ export const TitleBar: React.FC<TitleBarProps> = ({ onOpenSettings, watcherActiv
         </button>
         <button
           onClick={handleMinimize}
-          title="Minimizar"
+          title={t.minimizeTitle}
           data-tauri-no-drag
           className="p-1.5 text-spotify-subtext hover:text-white hover:bg-spotify-elevated rounded transition-colors"
         >
@@ -78,7 +82,7 @@ export const TitleBar: React.FC<TitleBarProps> = ({ onOpenSettings, watcherActiv
         </button>
         <button
           onClick={handleClose}
-          title="Ocultar a la bandeja del sistema"
+          title={t.hideTitle}
           data-tauri-no-drag
           className="p-1.5 text-spotify-subtext hover:text-spotify-error hover:bg-spotify-elevated rounded transition-colors"
         >
