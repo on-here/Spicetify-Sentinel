@@ -1,0 +1,16 @@
+# Node & Vite
+node_modules/
+dist/
+dist-ssr/
+*.local
+
+# Rust & Tauri
+src-tauri/target/
+src-tauri/gen/
+
+# Editor & System
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+*.log
