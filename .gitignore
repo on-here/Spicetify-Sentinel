@@ -8,9 +8,14 @@ dist-ssr/
 src-tauri/target/
 src-tauri/gen/
 
+# Temporary / Scratch scripts
+scripts/generate_blue_icon.ps1
+scripts/generate_spotify_green_icon.ps1
+
 # Editor & System
 .vscode/
 .idea/
 .DS_Store
 Thumbs.db
 *.log
+.gemini/

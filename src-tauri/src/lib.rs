@@ -4,7 +4,7 @@ use std::sync::{Arc, Mutex};
 use tauri::{
     menu::{Menu, MenuItem},
     tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent},
-    AppHandle, Manager, State,
+    AppHandle, Manager, State, WebviewUrl, WebviewWindowBuilder,
 };
 use tauri_plugin_notification::NotificationExt;
 
@@ -26,6 +26,27 @@ use watcher::SentinelWatcher;
 
 struct AppState {
     logs: Arc<Mutex<Vec<SentinelLog>>>,
+}
+
+pub fn show_or_create_main_window(app: &AppHandle) {
+    if let Some(window) = app.get_webview_window("main") {
+        let _ = window.show();
+        let _ = window.set_focus();
+    } else {
+        let _ = WebviewWindowBuilder::new(
+            app,
+            "main",
+            WebviewUrl::App("index.html".into()),
+        )
+        .title("Spicetify Sentinel")
+        .inner_size(800.0, 620.0)
+        .min_inner_size(720.0, 540.0)
+        .resizable(true)
+        .decorations(false)
+        .shadow(true)
+        .center()
+        .build();
+    }
 }
 
 #[tauri::command]
@@ -81,20 +102,25 @@ fn toggle_update_blocker(enable: bool, state: State<'_, AppState>) -> Result<Com
 }
 
 #[tauri::command]
-fn run_auto_heal(state: State<'_, AppState>, app: AppHandle) -> Result<CommandResult, String> {
-    add_internal_log(&state.logs, "info", "Iniciando ciclo de auto-sanación manual...");
+fn run_auto_heal(app: AppHandle, state: State<'_, AppState>) -> Result<CommandResult, String> {
+    add_internal_log(&state.logs, "info", "Iniciando auto-sanación e inyección...");
 
     let res = SpicetifyManager::auto_heal();
     let (success, message, level) = match res {
         Ok(msg) => {
-            let _ = app.notification()
-                .builder()
+            let _ = app.notification().builder()
                 .title("Spicetify Sentinel")
-                .body("Spotify ha sido re-parcheado con éxito.")
+                .body("Spicetify aplicado y reparado correctamente con Adblock.")
                 .show();
             (true, msg, "success")
         }
-        Err(e) => (false, e, "error"),
+        Err(e) => {
+            let _ = app.notification().builder()
+                .title("Spicetify Sentinel")
+                .body(&format!("Error reparando Spicetify: {}", e))
+                .show();
+            (false, e, "error")
+        }
     };
 
     add_internal_log(&state.logs, level, &message);
@@ -108,14 +134,12 @@ fn run_auto_heal(state: State<'_, AppState>, app: AppHandle) -> Result<CommandRe
 
 #[tauri::command]
 fn force_spicetify_apply(state: State<'_, AppState>) -> Result<CommandResult, String> {
-    add_internal_log(&state.logs, "info", "Ejecutando spicetify backup apply...");
+    add_internal_log(&state.logs, "info", "Re-aplicando Spicetify...");
 
-    let _ = SpicetifyManager::ensure_adblock_installed();
-
-    let res = SpicetifyManager::run_spicetify_command(&["backup", "apply", "-n"]);
+    let res = SpicetifyManager::run_spicetify_command(&["apply", "-n"]);
     let (success, message, level) = match res {
-        Ok(msg) => (true, format!("Spicetify aplicado con éxito: {}", msg), "success"),
-        Err(e) => (false, format!("Error aplicando Spicetify: {}", e), "error"),
+        Ok(msg) => (true, format!("Spicetify aplicado: {}", msg), "success"),
+        Err(e) => (false, format!("Error al aplicar: {}", e), "error"),
     };
 
     add_internal_log(&state.logs, level, &message);
@@ -133,10 +157,7 @@ fn install_spicetify_cli(state: State<'_, AppState>) -> Result<CommandResult, St
 
     let res = SpicetifyManager::install_spicetify_cli();
     let (success, message, level) = match res {
-        Ok(msg) => {
-            let _ = SpicetifyManager::ensure_adblock_installed();
-            (true, msg, "success")
-        }
+        Ok(msg) => (true, msg, "success"),
         Err(e) => (false, e, "error"),
     };
 
@@ -151,14 +172,11 @@ fn install_spicetify_cli(state: State<'_, AppState>) -> Result<CommandResult, St
 
 #[tauri::command]
 fn ensure_adblock(state: State<'_, AppState>) -> Result<CommandResult, String> {
-    add_internal_log(&state.logs, "info", "Configurando extensión obligatoria de Adblock...");
+    add_internal_log(&state.logs, "info", "Verificando extensión Adblock...");
 
     let res = SpicetifyManager::ensure_adblock_installed();
     let (success, message, level) = match res {
-        Ok(msg) => {
-            let _ = SpicetifyManager::run_spicetify_command(&["apply", "-n"]);
-            (true, msg, "success")
-        }
+        Ok(msg) => (true, msg, "success"),
         Err(e) => (false, e, "error"),
     };
 
@@ -173,14 +191,11 @@ fn ensure_adblock(state: State<'_, AppState>) -> Result<CommandResult, String> {
 
 #[tauri::command]
 fn ensure_marketplace(state: State<'_, AppState>) -> Result<CommandResult, String> {
-    add_internal_log(&state.logs, "info", "Instalando Spicetify Marketplace...");
+    add_internal_log(&state.logs, "info", "Verificando Custom App Marketplace...");
 
     let res = SpicetifyManager::ensure_marketplace_installed();
     let (success, message, level) = match res {
-        Ok(msg) => {
-            let _ = SpicetifyManager::run_spicetify_command(&["apply", "-n"]);
-            (true, msg, "success")
-        }
+        Ok(msg) => (true, msg, "success"),
         Err(e) => (false, e, "error"),
     };
 
@@ -263,14 +278,15 @@ fn nuclear_reinstall(state: State<'_, AppState>) -> Result<CommandResult, String
 #[tauri::command]
 fn set_autostart(enable: bool, state: State<'_, AppState>) -> Result<CommandResult, String> {
     let res = AutoStartManager::set_enabled(enable);
+
     let (success, message, level) = match res {
         Ok(_) => {
             let msg = if enable {
-                "Inicio automático con Windows activado.".to_string()
+                "Inicio automático activado con Windows."
             } else {
-                "Inicio automático con Windows desactivado.".to_string()
+                "Inicio automático desactivado."
             };
-            (true, msg, "info")
+            (true, msg.to_string(), "info")
         }
         Err(e) => (false, e, "error"),
     };
@@ -289,6 +305,22 @@ fn get_logs(state: State<'_, AppState>) -> Result<Vec<SentinelLog>, String> {
     Ok(get_logs_internal(&state.logs))
 }
 
+#[tauri::command]
+fn window_minimize(window: tauri::Window) {
+    let _ = window.minimize();
+}
+
+#[tauri::command]
+fn window_hide(window: tauri::Window) {
+    let _ = window.destroy();
+    SentinelWatcher::trim_memory();
+}
+
+#[tauri::command]
+fn window_start_drag(window: tauri::Window) {
+    let _ = window.start_dragging();
+}
+
 fn add_internal_log(logs: &Arc<Mutex<Vec<SentinelLog>>>, level: &str, message: &str) {
     let log = SentinelLog::new(level, message);
 
@@ -298,22 +330,6 @@ fn add_internal_log(logs: &Arc<Mutex<Vec<SentinelLog>>>, level: &str, message: &
             lock.pop();
         }
     }
-}
-
-#[tauri::command]
-fn window_minimize(window: tauri::Window) {
-    let _ = window.minimize();
-}
-
-#[tauri::command]
-fn window_hide(window: tauri::Window) {
-    let _ = window.hide();
-    SentinelWatcher::trim_memory();
-}
-
-#[tauri::command]
-fn window_start_drag(window: tauri::Window) {
-    let _ = window.start_dragging();
 }
 
 fn get_logs_internal(logs: &Arc<Mutex<Vec<SentinelLog>>>) -> Vec<SentinelLog> {
@@ -358,13 +374,10 @@ pub fn run() {
             let _tray = builder
                 .on_menu_event(|app, event| match event.id.as_ref() {
                     "quit" => {
-                        app.exit(0);
+                        std::process::exit(0);
                     }
                     "show" => {
-                        if let Some(window) = app.get_webview_window("main") {
-                            let _ = window.show();
-                            let _ = window.set_focus();
-                        }
+                        show_or_create_main_window(app);
                     }
                     "heal" => {
                         let _ = SpicetifyManager::auto_heal();
@@ -390,11 +403,7 @@ pub fn run() {
                         ..
                     } = event
                     {
-                        let app = tray.app_handle();
-                        if let Some(window) = app.get_webview_window("main") {
-                            let _ = window.show();
-                            let _ = window.set_focus();
-                        }
+                        show_or_create_main_window(tray.app_handle());
                     }
                 })
                 .build(app)?;
@@ -407,7 +416,7 @@ pub fn run() {
         .on_window_event(|window, event| {
             if let tauri::WindowEvent::CloseRequested { api, .. } = event {
                 api.prevent_close();
-                let _ = window.hide();
+                let _ = window.destroy();
                 SentinelWatcher::trim_memory();
             }
         })
@@ -428,6 +437,11 @@ pub fn run() {
             window_hide,
             window_start_drag,
         ])
-        .run(tauri::generate_context!())
-        .expect("error while running tauri application");
+        .build(tauri::generate_context!())
+        .expect("error while building tauri application")
+        .run(|_app_handle, event| {
+            if let tauri::RunEvent::ExitRequested { api, .. } = event {
+                api.prevent_exit();
+            }
+        });
 }
