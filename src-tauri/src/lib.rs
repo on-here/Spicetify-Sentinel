@@ -313,7 +313,7 @@ fn window_minimize(window: tauri::Window) {
 
 #[tauri::command]
 fn window_hide(window: tauri::Window) {
-    let _ = window.hide();
+    let _ = window.destroy();
     SentinelWatcher::trim_memory();
 }
 
@@ -435,6 +435,9 @@ pub fn run() {
             if !is_minimized {
                 show_or_create_main_window(&handle);
             } else {
+                if let Some(win) = app.get_webview_window("main") {
+                    let _ = win.destroy();
+                }
                 SentinelWatcher::trim_memory();
             }
 
@@ -443,7 +446,7 @@ pub fn run() {
         .on_window_event(|window, event| {
             if let tauri::WindowEvent::CloseRequested { api, .. } = event {
                 api.prevent_close();
-                let _ = window.hide();
+                let _ = window.destroy();
                 SentinelWatcher::trim_memory();
             }
         })
