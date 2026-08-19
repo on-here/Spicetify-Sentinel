@@ -82,14 +82,29 @@ Every time Spotify performs a silent background update on Windows, it overwrites
 
 ---
 
-## 🚀 Getting Started
+## ⬇️ Download & Installation
 
-### Option 1: Standalone Portable (No installation needed)
-Download `spicetify-sentinel.exe` from the latest release, launch it, and toggle **Start with Windows** in Settings.
+You **do not** need Node.js, Rust, or any developer tools to use Spicetify Sentinel. Ready-to-use binaries are available on the [**GitHub Releases**](../../releases) page:
 
-### Option 2: Build from Source
+| Format | File | Description |
+| :--- | :--- | :--- |
+| 🚀 **Portable (Recommended)** | `spicetify-sentinel.exe` | Zero installation. Just double-click to run from any folder. |
+| 📦 **Windows Setup** | `Spicetify-Sentinel-Setup.exe` | Classic Windows installer with Start Menu shortcuts and uninstaller. |
+| 🛡️ **MSI Package** | `Spicetify-Sentinel.msi` | Enterprise/standard Windows installer package. |
 
-#### Prerequisites
+### ⚡ Quick Setup
+1. Download `spicetify-sentinel.exe` from [**Releases**](../../releases/latest).
+2. Run the application. It will automatically check your setup, block Spotify auto-updates, and inject Adblock.
+3. Click the **Gear icon (⚙️)** in the top right and toggle **"Start with Windows"**.
+4. Close the window to minimize it to the System Tray. You're fully protected!
+
+---
+
+## 🛠️ Building from Source (Developers)
+
+If you'd like to contribute or build the application yourself:
+
+### Prerequisites
 - [Node.js](https://nodejs.org/) 20+
 - [Rust & Cargo](https://rustup.rs/) 1.80+
 
@@ -98,19 +113,17 @@ Download `spicetify-sentinel.exe` from the latest release, launch it, and toggle
 git clone https://github.com/your-username/Auto_spicetify.git
 cd Auto_spicetify
 
-# 2. Install frontend dependencies
+# 2. Install dependencies
 npm install
 
-# 3. Run development mode (Hot-reload UI + Rust backend)
+# 3. Development mode (Hot-reload UI + Rust IPC)
 npm run tauri dev
 
-# 4. Build optimized standalone release & installers
+# 4. Production build (Generates portable .exe and installers)
 npm run tauri build
 ```
 
-The compiled binaries will be available at:
-- **Portable `.exe`:** `src-tauri/target/release/spicetify-sentinel.exe`
-- **NSIS Setup `.exe`:** `src-tauri/target/release/bundle/nsis/Spicetify Sentinel_1.0.0_x64-setup.exe`
+Compiled outputs will be generated in `src-tauri/target/release/`.
 
 ---
 
