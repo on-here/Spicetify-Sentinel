@@ -2,7 +2,7 @@
 
 <div align="center">
 
-<img width="800" height="620" alt="spicetify-sentinel_jpwCyzmz3S" src="https://github.com/user-attachments/assets/9045fa60-f472-4e47-bc62-25cd4b3e1432" />
+
 
 **The ultimate zero-footprint auto-repair sentinel and update blocker for Spotify & Spicetify on Windows.**  
 *System-level NTFS update freezing, automatic silent healing, on-demand WebView2 lifecycle (~2.5 MB idle RAM), and Spotify dark theme.*
@@ -12,6 +12,8 @@
 [![Built with Rust & Tauri 2](https://img.shields.io/badge/Built%20with-Rust%20%7C%20Tauri%202.0-DEA584.svg)](https://v2.tauri.app/)
 [![Idle Memory](https://img.shields.io/badge/Idle%20RAM-~2.5%20MB-1DB954.svg)]()
 [![Idle CPU](https://img.shields.io/badge/Idle%20CPU-0.0%25-1DB954.svg)]()
+
+<img width="800" height="620" alt="spicetify-sentinel_jpwCyzmz3S" src="https://github.com/user-attachments/assets/9045fa60-f472-4e47-bc62-25cd4b3e1432" />
 
 </div>
 
