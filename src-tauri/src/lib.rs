@@ -435,9 +435,6 @@ pub fn run() {
             if !is_minimized {
                 show_or_create_main_window(&handle);
             } else {
-                if let Some(win) = app.get_webview_window("main") {
-                    let _ = win.destroy();
-                }
                 SentinelWatcher::trim_memory();
             }
 
