@@ -94,7 +94,6 @@ You **do not** need Node.js, Rust, or any developer tools to use Spicetify Senti
 | :--- | :--- | :--- |
 | 🚀 **Portable (Recommended)** | `spicetify-sentinel.exe` | Zero installation. Just double-click to run from any folder. |
 | 📦 **Windows Setup** | `Spicetify-Sentinel-Setup.exe` | Classic Windows installer with Start Menu shortcuts and uninstaller. |
-| 🛡️ **MSI Package** | `Spicetify-Sentinel.msi` | Enterprise/standard Windows installer package. |
 
 ### ⚡ Quick Setup
 1. Download `spicetify-sentinel.exe` from [**Releases**](../../releases/latest).
